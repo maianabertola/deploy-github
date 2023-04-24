@@ -1,0 +1,50 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+* {
+  margin: 0;
+}
+
+main {
+  background-color: hsl(291, 14%, 18%);
+  font-family: "Press Start 2P", monospace;
+  margin: auto;
+  position: relative;
+}
+
+h1 {
+  color: hsl(291, 14%, 98%);
+  padding: 3rem;
+  font-size: 2rem;
+  font-family: "Press Start 2P", monospace;
+}
+
+#gameAerea {
+  border: 0.5rem solid pink;
+  border-radius: 3rem;
+  width: 50vw;
+  height: 70vh;
+  background-color: hsl(291, 22%, 96%);
+  margin: auto;
+}
+
+#btnStart {
+  padding: O.5rem;
+  background-color: beige;
+  width: 5rem;
+}
+
+.entities {
+  width: 1rem;
+  height: 1rem;
+  background-color: brown;
+  margin: 0;
+  position: absolute;
+}
+
+#player {
+  width: 1rem;
+  height: 1rem;
+  background-color: green;
+  margin: 0;
+  position: absolute;
+}
