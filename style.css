@@ -18,9 +18,16 @@ h1 {
   font-family: "Press Start 2P", monospace;
 }
 
+h2 {
+  color: hsl(291, 14%, 98%);
+  padding: 3rem;
+  font-size: 1rem;
+  font-family: "Press Start 2P", monospace;
+}
+
 #gameAerea {
   border: 0.5rem solid pink;
-  border-radius: 3rem;
+  /* border-radius: 3rem; */
   width: 50vw;
   height: 70vh;
   background-color: hsl(291, 22%, 96%);
@@ -47,4 +54,13 @@ h1 {
   background-color: green;
   margin: 0;
   position: absolute;
+}
+
+#popup {
+  width: 100%;
+  background-color: blueviolet;
+}
+
+#end-game {
+  margin: auto, 0;
 }
