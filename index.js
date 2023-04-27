@@ -1,12 +1,19 @@
-//global elements
+//GLOBAL ELEMENTS
+
+//My screens
+const gameOverDiv = document.getElementById("gameOver");
+gameOverDiv.classList.add("hidden");
 
 //My map
 const gameAerea = document.getElementById("gameAerea");
 // bottom: 505.296875 height:372.296875 left:275 right:857 top:133 width:582
 //x: 275 y: 133
 const gameBorders = gameAerea.getBoundingClientRect();
+//console.log(gameBorders);
 
-const modal = document.getElementById("end-game");
+//my counter
+let mycounter = document.querySelector("#myCounter span");
+let counter = 0;
 
 //Fire events when everything is fully loaded
 window.onload = function () {
@@ -23,19 +30,16 @@ const pressedKeys = {
 };
 
 class Entities {
-  constructor(name) {
-    this.name = name;
-    this.speed = 1;
-    this.points = 0;
+  constructor(name, speed, life) {
+    this.name = name || "ennemy";
+    this.speed = speed || 4;
     this.array = [];
     this.elementBorders;
     this.arrayElementBorders = [];
 
-    setInterval(() => {
-      this.element = this.createEntities();
-      this.array.push(this.element);
-      this.spawnPosition(this.element);
-    }, 10000);
+    this.element = this.createEntities();
+    this.x = gameAerea.offsetWidth + gameAerea.offsetLeft - 16;
+    this.randomYPosition();
   }
 
   // Create points or enemies
@@ -46,47 +50,58 @@ class Entities {
     return div;
   }
 
-  // Randomly spawn the entities and make them move from the right to the left
-  spawnPosition(div) {
-    const elementBorders = div.getBoundingClientRect();
-    // console.log("avant", elementBorders);
-    this.arrayElementBorders.push(elementBorders);
+  isOutOfBound() {
+    const entityBounding = this.element.getBoundingClientRect();
 
-    // Set up the limited space where to spawn
+    if (entityBounding.left < gameBorders.left) {
+      return true;
+    }
+    return false;
+  }
+
+  remove() {
+    this.element.remove();
+  }
+
+  setPosition() {
+    this.element.style.top = this.y + "px";
+    this.element.style.left = this.x + "px";
+  }
+
+  move() {
+    this.x -= this.speed;
+    this.setPosition();
+  }
+  randomYPosition() {
+    const elementBorders = this.element.getBoundingClientRect();
     const maxY = gameBorders.top + elementBorders.height;
     const minY = gameBorders.bottom - 10 - elementBorders.height * 1.2;
 
     // Random spawn for Y; X remains the same
-    const positionY = Math.floor(Math.random() * (maxY - minY) + minY);
-    const positionX = gameBorders.right - elementBorders.width * 1.5;
+    this.y = Math.floor(Math.random() * (maxY - minY) + minY);
+  }
+}
 
-    //update my element x & y with new value
-    elementBorders.x = positionX;
-    elementBorders.y = positionY;
-    // Style the new positions to move the entities
-    div.style.top = positionY + "px";
-    div.style.left = positionX + "px";
+class Points extends Entities {
+  constructor(name, speed, life, pointsValue) {
+    super(name, speed, life);
+    this.pointsValue = pointsValue || 5;
+    this.speed = 8;
+    // this.goodElement = this.createEntities();
+  }
 
-    // Move the entities at a constant speed
-    const moveInterval = setInterval(() => {
-      const currentLeft = parseFloat(div.style.left); //convert into number
-      const newLeft = currentLeft - this.speed;
-      div.style.left = newLeft + "px";
-      elementBorders.x -= this.speed;
-      // console.log("apres", elementBorders.x);
+  createEntities() {
+    super.createEntities;
+    const div = document.createElement("div");
+    div.classList.add("points");
+    gameAerea.append(div);
+    return div;
+  }
 
-      // Remove the entity if it goes beyond the game area
-      if (newLeft < gameBorders.left + 10) {
-        clearInterval(moveInterval); // stop the interval to move the div
-        div.remove(); //remove the div from the page
-        const index = this.array.indexOf(div); // find the index of the div removed
-        if (index !== -1) {
-          // returns -1 if not found
-          this.array.splice(index, 1); // splice one element from the index
-          this.arrayElementBorders.splice(index, 1); //same for this array
-        }
-      }
-    }, 50);
+  move() {
+    super.move;
+    this.x -= this.speed;
+    this.setPosition();
   }
 }
 
@@ -94,16 +109,16 @@ class Entities {
 class Player {
   constructor() {
     this.player = this.createPlayer();
-    this.playerPosition = this.setPosition(this.player);
-    this.playerBorders;
-    window.addEventListener("keydown", this.handlePressedKeys.bind(this)); //create a window event which fires a function; bind this = refers to the Player class
-    window.addEventListener("keyup", this.handleReleasedKeys.bind(this)); //create a window event which fires a function; bind this = refers to the Player class
+
+    this.playerBorders = this.setPosition(); // getBoundingClientRect
+    window.addEventListener("keydown", (e) => this.handlePressedKeys(e)); //create a window event which fires a function; bind this = refers to the Player class
+    window.addEventListener("keyup", (e) => this.handleReleasedKeys(e)); //create a window event which fires a function; bind this = refers to the Player class
     this.animate();
-    this.speed = 5;
+    this.speed = 10;
     this.move();
+    this.attackDamage = 20;
   }
 
-  //instantiate my player
   createPlayer() {
     const div = document.createElement("div");
     div.id = "player";
@@ -111,21 +126,20 @@ class Player {
     return div;
   }
 
-  //set up the position of my player
+  //Set up the position of my player
   setPosition() {
-    this.playerBorders = this.player.getBoundingClientRect();
-
-    //references to help me place it
-    const positionX = this.playerBorders.x + 10;
-    const positionY = gameAerea.getBoundingClientRect().bottom / 2;
+    //Mark positions to place the player
+    const positionX = gameBorders.left;
+    const positionY = gameBorders.height;
 
     //placing my player in the gameAerea
     this.player.style.left = positionX + "px";
     this.player.style.bottom = positionY + "px";
 
     //store new values
-    this.playerBorders.x = positionX;
-    this.playerBorders.y = positionY;
+    // this.playerBorders.x = positionX;
+    // this.playerBorders.y = positionY;
+    return this.player.getBoundingClientRect();
   }
 
   handlePressedKeys(event) {
@@ -184,31 +198,14 @@ class Player {
     ) {
       this.move("right");
     }
-    // console.log("map'", gameBorders);
-    // console.log("player", this.playerBorders);
-    if (
-      pressedKeys.down === true &&
-      this.playerBorders.bottom < gameBorders.bottom
-    ) {
+
+    if (pressedKeys.down === true && this.playerBorders.y > 44) {
       this.move("down");
-      // console.log(this.playerBorders.bottom, gameBorders.bottom);
-      //62, 409
     }
 
-    if (pressedKeys.up === true && this.playerBorders.top > gameBorders.top) {
+    if (pressedKeys.up === true && this.playerBorders.y < 529) {
       this.move("up");
     }
-    console.log(this.playerBorders.top, gameBorders.top);
-    //315, 120
-
-    if (pressedKeys.space === true) {
-      console.log(pressedKeys.space);
-      this.attack();
-    }
-
-    // else if (pressedKeys.space !== true){
-    //   this.player.style.transform = "rotate(30deg)"
-    // }
   }
 
   move(direction) {
@@ -229,51 +226,114 @@ class Player {
     this.player.style.left = this.playerBorders.x + "px"; // style.left and bottom require a string so "px"
     this.player.style.bottom = this.playerBorders.y + "px";
   }
-
-  attack() {
-    this.player.style.transform = "rotate(300deg)";
-  }
 }
 
 class Game {
   constructor() {
     this.player = new Player();
-    this.entities = new Entities();
+    this.entities = [];
+    this.points = [];
     this.dectectionInterval = null;
-    this.collisionDetection();
+    this.frames = 0;
+    this.animate();
   }
 
-  collisionDetection() {
-    console.log("DETECT");
-    const playerPos = this.player.playerBorders;
-    const entitiesArr = this.entities.arrayElementBorders;
-    // console.log(entitiesArr);
-
-    let checkCollision = setInterval(() => {
-      // console.log("test");
-      for (let i = 0; i < entitiesArr.length; i++) {
-        let elementPos = entitiesArr[i];
-        console.log(playerPos, elementPos);
-        // console.log("playerpos", playerPos);
-        // console.log(entitiesArr);
-        // console.log(elementPos);
-        if (
-          playerPos.right === elementPos.left ||
-          playerPos.left === elementPos.right ||
-          playerPos.top === elementPos.bottom ||
-          playerPos.bottom === elementPos.bottom
-        ) {
-          console.log("CRASH");
-          this.gameOver();
-          clearInterval(checkCollision);
-        }
+  animate() {
+    this.intervalId = setInterval(() => {
+      this.frames++;
+      if (this.frames % 60 === 0) {
+        this.entities.push(new Entities());
+        this.points.push(new Points());
       }
-    }, 1000);
+
+      //loopt through array of entities
+      let indexToRemove = null;
+      this.entities.forEach((entity, index) => {
+        entity.move();
+        if (entity.isOutOfBound()) {
+          entity.remove();
+          indexToRemove = index;
+        }
+        this.checkCollision(entity);
+      });
+      if (indexToRemove !== null) {
+        this.entities.splice(indexToRemove, 1);
+      }
+
+      //loop through array of points
+      this.points.forEach((point, index) => {
+        point.move();
+        if (point.isOutOfBound()) {
+          point.remove();
+          indexToRemove = index;
+          this.points.splice(indexToRemove, 1);
+          // console.log("APRES", this.points.length);
+        }
+        this.gainPoint(point);
+      });
+    }, 1000 / 15);
+  }
+
+  checkCollision(entity) {
+    const playerBounding = this.player.player.getBoundingClientRect();
+    const entityBounding = entity.element.getBoundingClientRect();
+    // console.log(entityBounding);
+
+    const isInX =
+      entityBounding.left <= playerBounding.right &&
+      entityBounding.right >= playerBounding.left;
+    const isInY =
+      entityBounding.bottom >= playerBounding.top &&
+      entityBounding.top <= playerBounding.bottom;
+
+    const inInXExtended =
+      entityBounding.left + 32 <= playerBounding.right &&
+      entityBounding.right - 32 >= playerBounding.left;
+
+    const inInYExtended =
+      entityBounding.bottom + 32 >= playerBounding.top &&
+      entityBounding.top - 32 <= playerBounding.bottom;
+
+    if (pressedKeys.space && isInX && isInY) {
+      console.log("Sword hit !!!");
+      entity.remove();
+      let indexRemove = this.entities.indexOf(entity);
+      this.entities.slice(indexRemove, 1);
+      console.log(this.entities);
+    } else if (isInX && isInY) {
+      this.gameOver();
+    }
+  }
+
+  gainPoint(point) {
+    console.log(point);
+
+    const playerBounding = this.player.player.getBoundingClientRect();
+    const pointBounding = point.element.getBoundingClientRect();
+    console.log(pointBounding);
+
+    const pointIsinX =
+      pointBounding.left <= playerBounding.right &&
+      pointBounding.right >= playerBounding.left;
+
+    const pointIsinY =
+      pointBounding.bottom >= playerBounding.top &&
+      pointBounding.top <= playerBounding.bottom;
+
+    if (pointIsinX && pointIsinY) {
+      const isPoints = point.pointsValue;
+      console.log(isPoints);
+      counter += isPoints;
+      mycounter.innerHTML = counter;
+      console.log(counter);
+    }
   }
 
   gameOver() {
     console.log("gameover");
-    // modal.showModal();
+    clearInterval(this.intervalId);
+    gameOverDiv.classList.remove("hidden");
+    gameOverDiv.classList.add("display");
   }
 }
 

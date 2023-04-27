@@ -10,17 +10,20 @@
   </head>
   <main>
     <body>
-      <h1>Score</h1>
+      <div id="myCounter">
+        <h1>Your score <span>0</span></h1>
+      </div>
       <div id="gameAerea"></div>
-
       <button id="btnStart">Start Game</button>
 
-      <dialog id="end-game">
-        <h2>Poupou disapointment</h2>
-        <p>you're such a looser</p>
-        <button id="restart">Try again</button>
-        <button id="quit">Quit</button>
-      </dialog>
+      <div id="gameOver">
+        <h2>Poupou is choquée and déçue</h2>
+        <p>Well, you scored <span>0</span> points.</p>
+        <div class="containerBtn">
+          <div class="btn">Try again</div>
+          <div class="btn quitBtn">Quit</div>
+        </div>
+      </div>
     </body>
   </main>
 </html>
